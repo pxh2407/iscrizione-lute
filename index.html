@@ -116,6 +116,8 @@ body.gia-socio .solo-nuovo{display:none}
 .fin img{width:100%;border:1px solid var(--bordo);border-radius:8px;margin:10px 0}
 .fin ol{padding-left:1.3em;margin:8px 0}
 .fin li{margin:6px 0}
+.velo.ok #anteprima,.velo.ok #apri-chat{display:none}
+.velo.ok h3{font-size:1.4rem;color:var(--wa)}
 footer{text-align:center;font-size:.85rem;color:var(--testo-tenue);margin:30px 0 10px}
 </style>
 </head>
@@ -450,14 +452,22 @@ $('invia').addEventListener('click', async () => {
 
   $('anteprima').src = urlImg;
   $('apri-chat').href = urlChat;
+  $('velo').classList.remove('ok');
+  $('fin-t').textContent = 'Il modulo è pronto';
 
   if (navigator.canShare && navigator.canShare({files:[file]})){
-    $('fin-testo').innerHTML = '<ol><li>Nel menu che si è aperto scegli <strong>WhatsApp</strong>.</li>' +
-      '<li>Cerca il contatto della L.U.T.E. (<strong>388 077 5449</strong>) e premi <strong>Invia</strong>.</li></ol>' +
-      '<p class="nota">Se il menu non si è aperto, premi di nuovo il pulsante verde in basso.</p>';
-    $('velo').classList.add('on');
-    try { await navigator.share({files:[file], text: testo}); }
-    catch(e){ /* annullato dall'utente */ }
+    // si apre subito il menu di condivisione; la conferma compare solo a invio fatto
+    try {
+      await navigator.share({files:[file], text: testo});
+      $('velo').classList.add('ok');
+      $('fin-t').textContent = '✅ Modulo inviato correttamente';
+      $('fin-testo').innerHTML = '<p>Grazie! La tua richiesta di iscrizione è stata inviata alla L.U.T.E.</p>' +
+        '<p>Ricorda di recarti in sede per il <strong>pagamento di € 35</strong> e per la ricevuta con l\'elenco dei corsi.</p>';
+      $('velo').classList.add('on');
+    } catch(e){
+      if (e.name !== 'AbortError'){ alert('Invio non riuscito, riprova.'); }
+      // se il socio ha annullato non succede nulla: può ripremere il pulsante
+    }
   } else {
     // telefono che non permette la condivisione diretta: salvo l'immagine e apro la chat
     const a = document.createElement('a'); a.href = urlImg; a.download = file.name;
