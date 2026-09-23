@@ -379,7 +379,8 @@ $('invia').addEventListener('click', () => {
   const testo = encodeURIComponent(messaggio(raccogli()));
   // sul cellulare apro direttamente l'app WhatsApp (wa.me in alcuni browser porta a WhatsApp Web)
   const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-  const url = mobile ? `whatsapp://send?phone=${NUMERO}&text=${testo}` : `https://wa.me/${NUMERO}?text=${testo}`;
+  // sul PC apro direttamente WhatsApp Web (wa.me mostrerebbe prima la pagina "scarica WhatsApp")
+  const url = mobile ? `whatsapp://send?phone=${NUMERO}&text=${testo}` : `https://web.whatsapp.com/send?phone=${NUMERO}&text=${testo}`;
   $('velo').classList.add('on');   // "Modulo inviato" resta visibile al ritorno nell'app
   if (mobile) location.href = url; else window.open(url, '_blank');
 });
