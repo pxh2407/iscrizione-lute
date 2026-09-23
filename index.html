@@ -116,8 +116,7 @@ body.gia-socio .solo-nuovo{display:none}
 .fin img{width:100%;border:1px solid var(--bordo);border-radius:8px;margin:10px 0}
 .fin ol{padding-left:1.3em;margin:8px 0}
 .fin li{margin:6px 0}
-.velo.ok #anteprima,.velo.ok #apri-chat{display:none}
-.velo.ok h3{font-size:1.4rem;color:var(--wa)}
+.fin h3{font-size:1.4rem;color:var(--wa)}
 footer{text-align:center;font-size:.85rem;color:var(--testo-tenue);margin:30px 0 10px}
 </style>
 </head>
@@ -203,15 +202,15 @@ footer{text-align:center;font-size:.85rem;color:var(--testo-tenue);margin:30px 0
 
 <div class="velo" id="velo" role="dialog" aria-modal="true" aria-labelledby="fin-t">
   <div class="fin">
-    <h3 id="fin-t">Il modulo è pronto</h3>
-    <div id="fin-testo"></div>
-    <img id="anteprima" alt="Anteprima del modulo compilato">
-    <a class="btn btn-wa" id="apri-chat" target="_blank" rel="noopener">Apri la chat della L.U.T.E.</a>
+    <h3 id="fin-t">✅ Modulo inviato</h3>
+    <p>Grazie! La tua richiesta di iscrizione è stata inviata alla L.U.T.E.</p>
+    <p>Ricorda di recarti in sede per il <strong>pagamento di € 35</strong> e per la ricevuta con l'elenco dei corsi.</p>
     <button class="btn btn-sec" id="chiudi" type="button">Chiudi</button>
   </div>
 </div>
 
 <script src="corsi.js"></script>
+<script src="modulo.js"></script>
 <script>
 const NUMERO = '393880775449';
 const CAMPI = ['nome','luogo','nascita','indirizzo','citta','tel','email'];
@@ -235,7 +234,6 @@ CORSI.forEach(cat => {
     box.appendChild(el);
   });
 });
-const tutti = CORSI.flatMap(c => c.c.map(x => ({cat:c.n, cod:x[0], tit:x[1], doc:x[2], giorno:x[3]})));
 
 function aggiorna(){
   document.querySelectorAll('.corso').forEach(el => el.setAttribute('aria-checked', scelti.has(el.dataset.cod)));
@@ -342,146 +340,44 @@ function controlla(){
   m.classList.remove('on'); return true;
 }
 
-/* ---- disegno dell'immagine del modulo ---- */
-const logo = new Image(); logo.src = 'img/logo-lute.png';
+/* ---- dati raccolti e messaggio WhatsApp ---- */
+const SITO = 'https://pxh2407.github.io/iscrizione-lute/';
 
-function righe(ctx, testo, maxW){
-  const parole = testo.split(' '), out = []; let r = '';
-  parole.forEach(p => { const prova = r ? r + ' ' + p : p;
-    if (ctx.measureText(prova).width > maxW && r){ out.push(r); r = p; } else r = prova; });
-  if (r) out.push(r); return out;
+function raccogli(){
+  const d = {tipo, nome:$('nome').value.trim(), nascita:$('nascita').value,
+    corsi:[...scelti], data:new Date().toLocaleDateString('it-IT', {day:'2-digit', month:'2-digit', year:'numeric'})};
+  if (tipo === 'si') ['luogo','indirizzo','citta','tel','email'].forEach(k => d[k] = $(k).value.trim());
+  return d;
 }
 
-function disegna(){
-  const W = 1080, M = 60, F = 'Segoe UI, Roboto, Arial, sans-serif';
-  const oggi = new Date().toLocaleDateString('it-IT', {day:'2-digit', month:'2-digit', year:'numeric'});
-  const lista = tutti.filter(c => scelti.has(c.cod));
-  const c = document.createElement('canvas'), ctx = c.getContext('2d');
-  // altezza stimata con margine abbondante, poi si ritaglia
-  c.width = W; c.height = 1300 + lista.length * 130;
-  ctx.fillStyle = '#fbf9f4'; ctx.fillRect(0,0,W,c.height);
-
-  // intestazione
-  ctx.fillStyle = '#1f6f5c'; ctx.fillRect(0,0,W,230);
-  ctx.fillStyle = '#fff'; ctx.fillRect(M, 40, 320, 150);
-  if (logo.complete && logo.naturalWidth){
-    const h = 130, w = logo.naturalWidth * h / logo.naturalHeight;
-    ctx.drawImage(logo, M + (320 - w)/2, 50, w, h);
+function messaggio(d){
+  const r = ['📋 *ISCRIZIONE L.U.T.E. 2026/2027*', ''];
+  r.push('Nuovo socio: *' + (d.tipo === 'si' ? 'SÌ' : 'NO – già socio') + '*');
+  r.push('Cognome e Nome: *' + d.nome + '*');
+  if (d.tipo === 'si'){
+    r.push('Nato/a a: ' + d.luogo + ' il ' + d.nascita);
+    r.push('Indirizzo: ' + d.indirizzo + ' – ' + d.citta);
+    r.push('Tel.: ' + d.tel);
+    r.push('Email: ' + d.email);
+  } else {
+    r.push('Data di nascita: ' + d.nascita);
   }
-  ctx.textAlign = 'left'; ctx.fillStyle = '#fff';
-  ctx.font = `700 46px ${F}`; ctx.fillText('MODULO DI ISCRIZIONE', 420, 105);
-  ctx.font = `700 46px ${F}`; ctx.fillText('SOCIO', 420, 160);
-  ctx.font = `400 30px ${F}`; ctx.fillText('L.U.T.E. Milazzo · Anno 2026/2027', 420, 205);
-
-  let y = 300;
-  ctx.fillStyle = '#22302c'; ctx.font = `400 28px ${F}`;
-  righe(ctx, "Il/La sottoscritto/a chiede l'iscrizione alla L.U.T.E. di Milazzo per l'anno di attività 2026/2027 e dichiara:", W - 2*M)
-    .forEach(r => { ctx.fillText(r, M, y); y += 40; });
-  y += 20;
-
-  const dati = tipo === 'si' ? [
-    ['Nuovo socio', 'SÌ – prima iscrizione'],
-    ['Cognome e Nome', $('nome').value], ['Nato/a a', $('luogo').value], ['il', $('nascita').value],
-    ['Indirizzo', $('indirizzo').value], ['Città', $('citta').value],
-    ['Tel./Cell.', $('tel').value], ['Email', $('email').value]
-  ] : [
-    ['Nuovo socio', 'NO – già socio'],
-    ['Cognome e Nome', $('nome').value], ['Data di nascita', $('nascita').value]
-  ];
-  dati.forEach(([k, v]) => {
-    ctx.fillStyle = '#4f605b'; ctx.font = `600 28px ${F}`; ctx.fillText(k, M, y);
-    ctx.fillStyle = '#000'; ctx.font = `600 34px ${F}`;
-    const rr = righe(ctx, (v || '—').trim() || '—', W - 2*M - 300);
-    rr.forEach((r, i) => ctx.fillText(r, M + 300, y + i*44));
-    y += 44 * rr.length + 8;
-    ctx.strokeStyle = '#cfd9d5'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(M, y - 20); ctx.lineTo(W - M, y - 20); ctx.stroke();
-    y += 22;
-  });
-
-  // corsi
-  y += 20;
-  ctx.fillStyle = '#144a3d'; ctx.fillRect(M, y, W - 2*M, 64);
-  ctx.fillStyle = '#fff'; ctx.font = `700 32px ${F}`;
-  ctx.fillText(`Corsi che intendo frequentare (${lista.length})`, M + 20, y + 44);
-  y += 100;
-  lista.forEach(k => {
-    ctx.fillStyle = '#1f6f5c'; ctx.fillRect(M, y - 30, 36, 36);
-    ctx.fillStyle = '#fff'; ctx.font = `700 30px ${F}`; ctx.fillText('✓', M + 6, y);
-    ctx.fillStyle = '#000'; ctx.font = `700 32px ${F}`;
-    const rr = righe(ctx, `${k.cod} – ${k.tit}`, W - 2*M - 60);
-    rr.forEach((r, i) => ctx.fillText(r, M + 56, y + i*42));
-    y += 42 * rr.length;
-    ctx.fillStyle = '#4f605b'; ctx.font = `400 26px ${F}`;
-    ctx.fillText(`${k.doc} · ${k.giorno}`, M + 56, y); y += 56;
-  });
-
-  // consenso e data
-  y += 10;
-  ctx.fillStyle = '#22302c'; ctx.font = `400 26px ${F}`;
-  righe(ctx, "☑ Autorizzo il trattamento dei dati personali per le finalità associative, ai sensi del Reg. UE 2016/679 (GDPR).", W - 2*M)
-    .forEach(r => { ctx.fillText(r, M, y); y += 38; });
-  y += 30;
-  ctx.font = `600 30px ${F}`; ctx.fillText('Data: ' + oggi, M, y);
-  y += 40;
-  ctx.fillStyle = '#4f605b'; ctx.font = `400 22px ${F}`;
-  ctx.fillText('Modulo inviato dal cellulare tramite l\'app di iscrizione L.U.T.E.', M, y);
-  y += 40;
-
-  // ritaglio all'altezza effettiva
-  const out = document.createElement('canvas'); out.width = W; out.height = y;
-  out.getContext('2d').drawImage(c, 0, 0);
-  return out;
+  r.push('', '*Corsi scelti (' + d.corsi.length + '):*');
+  TUTTI_CORSI.filter(c => d.corsi.includes(c.cod)).forEach(c => r.push('✅ ' + c.cod + ' – ' + c.tit));
+  r.push('', '☑️ Consenso privacy (GDPR) accettato', 'Data: ' + d.data);
+  r.push('', '📄 *Modulo* (immagine JPG da salvare o stampare):', SITO + 'modulo.html#' + codificaDati(d));
+  return r.join('\n');
 }
 
-function nomeFile(){
-  const n = $('nome').value.trim().replace(/[^\p{L}\p{N}]+/gu, '_') || 'socio';
-  return `Iscrizione_LUTE_${n}.jpg`;
-}
-
-/* ---- invio ---- */
-$('invia').addEventListener('click', async () => {
+/* ---- invio: si apre la chat del numero indicato con il messaggio già scritto ---- */
+$('invia').addEventListener('click', () => {
   if (!controlla()) return;
-  if (!logo.complete) await new Promise(r => { logo.onload = logo.onerror = r; });
-  const canvas = disegna();
-  const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.9));
-  const file = new File([blob], nomeFile(), {type:'image/jpeg'});
-  const testo = `Iscrizione L.U.T.E. 2026/2027 – ${$('nome').value.trim()}`;
+  const testo = encodeURIComponent(messaggio(raccogli()));
   // sul cellulare apro direttamente l'app WhatsApp (wa.me in alcuni browser porta a WhatsApp Web)
   const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-  const urlChat = mobile
-    ? `whatsapp://send?phone=${NUMERO}&text=${encodeURIComponent(testo)}`
-    : `https://wa.me/${NUMERO}?text=${encodeURIComponent(testo)}`;
-  $('apri-chat').target = mobile ? '_self' : '_blank';
-  const urlImg = URL.createObjectURL(blob);
-
-  $('anteprima').src = urlImg;
-  $('apri-chat').href = urlChat;
-  $('velo').classList.remove('ok');
-  $('fin-t').textContent = 'Il modulo è pronto';
-
-  if (navigator.canShare && navigator.canShare({files:[file]})){
-    // si apre subito il menu di condivisione; la conferma compare solo a invio fatto
-    try {
-      await navigator.share({files:[file], text: testo});
-      $('velo').classList.add('ok');
-      $('fin-t').textContent = '✅ Modulo inviato correttamente';
-      $('fin-testo').innerHTML = '<p>Grazie! La tua richiesta di iscrizione è stata inviata alla L.U.T.E.</p>' +
-        '<p>Ricorda di recarti in sede per il <strong>pagamento di € 35</strong> e per la ricevuta con l\'elenco dei corsi.</p>';
-      $('velo').classList.add('on');
-    } catch(e){
-      if (e.name !== 'AbortError'){ alert('Invio non riuscito, riprova.'); }
-      // se il socio ha annullato non succede nulla: può ripremere il pulsante
-    }
-  } else {
-    // telefono che non permette la condivisione diretta: salvo l'immagine e apro la chat
-    const a = document.createElement('a'); a.href = urlImg; a.download = file.name;
-    document.body.appendChild(a); a.click(); a.remove();
-    $('fin-testo').innerHTML = '<ol><li>L\'immagine del modulo è stata <strong>salvata</strong> sul telefono.</li>' +
-      '<li>Premi <strong>Apri la chat della L.U.T.E.</strong></li>' +
-      '<li>Nella chat tocca la <strong>graffetta 📎</strong>, scegli l\'immagine e premi <strong>Invia</strong>.</li></ol>';
-    $('velo').classList.add('on');
-  }
+  const url = mobile ? `whatsapp://send?phone=${NUMERO}&text=${testo}` : `https://wa.me/${NUMERO}?text=${testo}`;
+  $('velo').classList.add('on');   // "Modulo inviato" resta visibile al ritorno nell'app
+  if (mobile) location.href = url; else window.open(url, '_blank');
 });
 $('chiudi').addEventListener('click', () => $('velo').classList.remove('on'));
 </script>
