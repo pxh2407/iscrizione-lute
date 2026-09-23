@@ -47,6 +47,14 @@ h2 .n{background:var(--verde);color:#fff;border-radius:50%;width:36px;height:36p
 .campo input:focus{outline:none;border-color:var(--verde);box-shadow:0 0 0 3px var(--verde-chiaro)}
 .campo.err input{border-color:var(--errore)}
 .obbl{color:var(--errore)}
+.scelta{display:flex;gap:12px}
+.scelta button{flex:1;font:inherit;font-size:1.3rem;font-weight:700;padding:14px 8px;border-radius:14px;
+  border:3px solid var(--bordo);background:#fff;color:var(--testo);cursor:pointer}
+.scelta button small{display:block;font-size:.85rem;font-weight:400;color:var(--testo-tenue)}
+.scelta button[aria-checked="true"]{border-color:var(--verde);background:var(--verde);color:#fff}
+.scelta button[aria-checked="true"] small{color:#fff}
+.campo.err .scelta button{border-color:var(--errore)}
+body.gia-socio .solo-nuovo{display:none}
 .data{display:flex;align-items:flex-start;gap:8px}
 .data>div{flex:2;text-align:center}
 .data>div.anno{flex:3}
@@ -126,11 +134,18 @@ footer{text-align:center;font-size:.85rem;color:var(--testo-tenue);margin:30px 0
   </div>
 
   <h2><span class="n">1</span> I tuoi dati</h2>
+  <div class="campo" id="c-tipo"><label>Sei un nuovo socio? <span class="obbl">*</span></label>
+    <div class="scelta" role="radiogroup" aria-label="Nuovo socio">
+      <button type="button" role="radio" aria-checked="false" data-v="si">Sì<small>prima iscrizione</small></button>
+      <button type="button" role="radio" aria-checked="false" data-v="no">No<small>sono già socio</small></button>
+    </div></div>
+
+  <div id="anagrafica" hidden>
   <div class="campo" id="c-nome"><label for="nome">Cognome e Nome <span class="obbl">*</span></label>
     <input id="nome" autocomplete="name" autocapitalize="words"></div>
-  <div class="campo"><label for="luogo">Nato/a a</label>
+  <div class="campo solo-nuovo" id="c-luogo"><label for="luogo">Nato/a a <span class="obbl">*</span></label>
     <input id="luogo" autocapitalize="words"></div>
-  <div class="campo" id="c-nascita"><label for="gg">il (data di nascita)</label>
+  <div class="campo" id="c-nascita"><label for="gg">il (data di nascita) <span class="obbl">*</span></label>
     <input type="hidden" id="nascita">
     <div class="data">
       <div><input id="gg" inputmode="numeric" maxlength="2" placeholder="gg" aria-label="Giorno"><small>Giorno</small></div>
@@ -139,14 +154,15 @@ footer{text-align:center;font-size:.85rem;color:var(--testo-tenue);margin:30px 0
       <span>/</span>
       <div class="anno"><input id="aa" inputmode="numeric" maxlength="4" placeholder="aaaa" aria-label="Anno"><small>Anno</small></div>
     </div></div>
-  <div class="campo"><label for="indirizzo">Indirizzo</label>
+  <div class="campo solo-nuovo" id="c-indirizzo"><label for="indirizzo">Indirizzo <span class="obbl">*</span></label>
     <input id="indirizzo" autocomplete="street-address"></div>
-  <div class="campo"><label for="citta">Città</label>
+  <div class="campo solo-nuovo" id="c-citta"><label for="citta">Città <span class="obbl">*</span></label>
     <input id="citta" autocapitalize="words"></div>
-  <div class="campo" id="c-tel"><label for="tel">Telefono / Cellulare <span class="obbl">*</span></label>
+  <div class="campo solo-nuovo" id="c-tel"><label for="tel">Telefono / Cellulare <span class="obbl">*</span></label>
     <input id="tel" type="tel" inputmode="tel" autocomplete="tel"></div>
-  <div class="campo"><label for="email">Email</label>
+  <div class="campo solo-nuovo" id="c-email"><label for="email">Email <span class="obbl">*</span></label>
     <input id="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off"></div>
+  </div>
 
   <h2><span class="n">2</span> Corsi che intendo frequentare</h2>
   <p class="nota" style="margin-top:0">Tocca un corso per sceglierlo; toccalo di nuovo per toglierlo.</p>
@@ -241,16 +257,26 @@ DATA.forEach(([id, max, dopo], i) => {
 });
 function dataValida(){
   const g = +$('gg').value, m = +$('mm').value, a = +$('aa').value;
-  if (!$('gg').value && !$('mm').value && !$('aa').value) return true;   // facoltativa
   const anno = new Date().getFullYear();
   if (!(a >= 1900 && a <= anno) || !(m >= 1 && m <= 12)) return false;
   return g >= 1 && g <= new Date(a, m, 0).getDate();
 }
 
+/* ---- nuovo socio sì / no ---- */
+let tipo = '';   // 'si' = nuovo socio (tutta l'anagrafica), 'no' = già socio (solo nome e data)
+function mostraTipo(){
+  document.querySelectorAll('.scelta button').forEach(b => b.setAttribute('aria-checked', b.dataset.v === tipo));
+  $('anagrafica').hidden = !tipo;
+  document.body.classList.toggle('gia-socio', tipo === 'no');
+}
+document.querySelectorAll('.scelta button').forEach(b => b.addEventListener('click', () => {
+  tipo = b.dataset.v; $('c-tipo').classList.remove('err'); mostraTipo(); salva();
+}));
+
 /* ---- bozza salvata sul telefono ---- */
 function salva(){
   try{
-    const d = {corsi:[...scelti], privacy:$('privacy').checked};
+    const d = {corsi:[...scelti], privacy:$('privacy').checked, tipo};
     CAMPI.forEach(k => d[k] = $(k).value);
     localStorage.setItem('iscrizione-lute', JSON.stringify(d));
   }catch(e){}
@@ -261,15 +287,17 @@ function carica(){
     CAMPI.forEach(k => { if (d[k]) $(k).value = d[k]; });
     (d.corsi||[]).forEach(c => scelti.add(c));
     $('privacy').checked = !!d.privacy;
+    tipo = d.tipo || '';
   }catch(e){}
 }
 CAMPI.forEach(k => $(k).addEventListener('input', () => { salva(); $(k).parentNode.classList.remove('err'); }));
 $('privacy').addEventListener('change', () => { salva(); $('c-priv').classList.remove('err'); });
-carica(); dividiData(); aggiorna();
+carica(); dividiData(); mostraTipo(); aggiorna();
 
 $('svuota').addEventListener('click', () => {
   if (!confirm('Vuoi cancellare tutti i dati inseriti?')) return;
   CAMPI.forEach(k => $(k).value = ''); dividiData(); scelti.clear(); $('privacy').checked = false;
+  tipo = ''; mostraTipo();
   aggiorna(); salva(); window.scrollTo({top:0, behavior:'smooth'});
 });
 
@@ -277,9 +305,18 @@ $('svuota').addEventListener('click', () => {
 function controlla(){
   const errori = []; let primo = null;
   const segna = (ok, el, testo) => { if (!ok){ errori.push(testo); el.classList.add('err'); primo = primo || el; } };
-  segna($('nome').value.trim().length > 2, $('c-nome'), 'scrivi Cognome e Nome');
-  segna(dataValida(), $('c-nascita'), 'controlla la data di nascita');
-  segna($('tel').value.replace(/\D/g,'').length >= 6, $('c-tel'), 'scrivi il numero di telefono');
+  segna(!!tipo, $('c-tipo'), 'rispondi se sei un nuovo socio');
+  if (tipo){
+    segna($('nome').value.trim().length > 2, $('c-nome'), 'scrivi Cognome e Nome');
+    segna(dataValida(), $('c-nascita'), 'scrivi la data di nascita completa e corretta');
+  }
+  if (tipo === 'si'){
+    segna($('luogo').value.trim().length > 1, $('c-luogo'), 'scrivi il luogo di nascita');
+    segna($('indirizzo').value.trim().length > 3, $('c-indirizzo'), "scrivi l'indirizzo");
+    segna($('citta').value.trim().length > 1, $('c-citta'), 'scrivi la città');
+    segna($('tel').value.replace(/\D/g,'').length >= 6, $('c-tel'), 'scrivi il numero di telefono');
+    segna(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($('email').value.trim()), $('c-email'), "scrivi un'email corretta");
+  }
   if (scelti.size === 0){ errori.push('scegli almeno un corso'); primo = primo || $('corsi'); }
   segna($('privacy').checked, $('c-priv'), 'spunta la casella del consenso');
   const m = $('msg');
@@ -329,10 +366,14 @@ function disegna(){
     .forEach(r => { ctx.fillText(r, M, y); y += 40; });
   y += 20;
 
-  const dati = [
+  const dati = tipo === 'si' ? [
+    ['Nuovo socio', 'SÌ – prima iscrizione'],
     ['Cognome e Nome', $('nome').value], ['Nato/a a', $('luogo').value], ['il', $('nascita').value],
     ['Indirizzo', $('indirizzo').value], ['Città', $('citta').value],
     ['Tel./Cell.', $('tel').value], ['Email', $('email').value]
+  ] : [
+    ['Nuovo socio', 'NO – già socio'],
+    ['Cognome e Nome', $('nome').value], ['Data di nascita', $('nascita').value]
   ];
   dati.forEach(([k, v]) => {
     ctx.fillStyle = '#4f605b'; ctx.font = `600 28px ${F}`; ctx.fillText(k, M, y);
