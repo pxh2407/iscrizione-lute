@@ -47,6 +47,12 @@ h2 .n{background:var(--verde);color:#fff;border-radius:50%;width:36px;height:36p
 .campo input:focus{outline:none;border-color:var(--verde);box-shadow:0 0 0 3px var(--verde-chiaro)}
 .campo.err input{border-color:var(--errore)}
 .obbl{color:var(--errore)}
+.data{display:flex;align-items:flex-start;gap:8px}
+.data>div{flex:2;text-align:center}
+.data>div.anno{flex:3}
+.data input{text-align:center;font-size:1.3rem;font-weight:600;letter-spacing:1px}
+.data small{display:block;font-size:.85rem;color:var(--testo-tenue);margin-top:3px}
+.data>span{font-size:1.6rem;color:var(--testo-tenue);padding-top:10px}
 
 .cat{margin:20px 0 8px;font-size:1.05rem;font-weight:700;color:#fff;background:var(--verde-scuro);
   padding:8px 14px;border-radius:10px}
@@ -124,8 +130,15 @@ footer{text-align:center;font-size:.85rem;color:var(--testo-tenue);margin:30px 0
     <input id="nome" autocomplete="name" autocapitalize="words"></div>
   <div class="campo"><label for="luogo">Nato/a a</label>
     <input id="luogo" autocapitalize="words"></div>
-  <div class="campo"><label for="nascita">il (giorno/mese/anno)</label>
-    <input id="nascita" inputmode="numeric" placeholder="es. 12/03/1950" maxlength="10"></div>
+  <div class="campo" id="c-nascita"><label for="gg">il (data di nascita)</label>
+    <input type="hidden" id="nascita">
+    <div class="data">
+      <div><input id="gg" inputmode="numeric" maxlength="2" placeholder="gg" aria-label="Giorno"><small>Giorno</small></div>
+      <span>/</span>
+      <div><input id="mm" inputmode="numeric" maxlength="2" placeholder="mm" aria-label="Mese"><small>Mese</small></div>
+      <span>/</span>
+      <div class="anno"><input id="aa" inputmode="numeric" maxlength="4" placeholder="aaaa" aria-label="Anno"><small>Anno</small></div>
+    </div></div>
   <div class="campo"><label for="indirizzo">Indirizzo</label>
     <input id="indirizzo" autocomplete="street-address"></div>
   <div class="campo"><label for="citta">Città</label>
@@ -201,13 +214,38 @@ function aggiorna(){
   $('conta').textContent = n === 0 ? 'Nessun corso scelto' : n === 1 ? '1 corso scelto' : n + ' corsi scelti';
 }
 
-/* data di nascita: barre automatiche */
-$('nascita').addEventListener('input', e => {
-  let v = e.target.value.replace(/\D/g,'').slice(0,8);
-  if (v.length > 4) v = v.slice(0,2)+'/'+v.slice(2,4)+'/'+v.slice(4);
-  else if (v.length > 2) v = v.slice(0,2)+'/'+v.slice(2);
-  e.target.value = v;
+/* data di nascita: tre caselle, il cursore avanza da solo */
+const DATA = [['gg',2,'mm'], ['mm',2,'aa'], ['aa',4,null]];
+function uniscData(){
+  const g = $('gg').value, m = $('mm').value, a = $('aa').value;
+  $('nascita').value = (g || m || a) ? `${g.padStart(2,'0')}/${m.padStart(2,'0')}/${a}` : '';
+  $('c-nascita').classList.remove('err'); salva();
+}
+function dividiData(){
+  const p = $('nascita').value.split('/');
+  $('gg').value = p[0] || ''; $('mm').value = p[1] || ''; $('aa').value = p[2] || '';
+}
+DATA.forEach(([id, max, dopo], i) => {
+  const el = $(id);
+  el.addEventListener('input', () => {
+    el.value = el.value.replace(/\D/g,'').slice(0, max);
+    if (el.value.length === max && dopo) $(dopo).focus();
+    uniscData();
+  });
+  el.addEventListener('blur', () => {
+    if (max === 2 && el.value.length === 1 && el.value !== '0') { el.value = '0' + el.value; uniscData(); }
+  });
+  el.addEventListener('keydown', e => {
+    if (e.key === 'Backspace' && el.value === '' && i > 0) $(DATA[i-1][0]).focus();
+  });
 });
+function dataValida(){
+  const g = +$('gg').value, m = +$('mm').value, a = +$('aa').value;
+  if (!$('gg').value && !$('mm').value && !$('aa').value) return true;   // facoltativa
+  const anno = new Date().getFullYear();
+  if (!(a >= 1900 && a <= anno) || !(m >= 1 && m <= 12)) return false;
+  return g >= 1 && g <= new Date(a, m, 0).getDate();
+}
 
 /* ---- bozza salvata sul telefono ---- */
 function salva(){
@@ -227,11 +265,11 @@ function carica(){
 }
 CAMPI.forEach(k => $(k).addEventListener('input', () => { salva(); $(k).parentNode.classList.remove('err'); }));
 $('privacy').addEventListener('change', () => { salva(); $('c-priv').classList.remove('err'); });
-carica(); aggiorna();
+carica(); dividiData(); aggiorna();
 
 $('svuota').addEventListener('click', () => {
   if (!confirm('Vuoi cancellare tutti i dati inseriti?')) return;
-  CAMPI.forEach(k => $(k).value = ''); scelti.clear(); $('privacy').checked = false;
+  CAMPI.forEach(k => $(k).value = ''); dividiData(); scelti.clear(); $('privacy').checked = false;
   aggiorna(); salva(); window.scrollTo({top:0, behavior:'smooth'});
 });
 
@@ -240,6 +278,7 @@ function controlla(){
   const errori = []; let primo = null;
   const segna = (ok, el, testo) => { if (!ok){ errori.push(testo); el.classList.add('err'); primo = primo || el; } };
   segna($('nome').value.trim().length > 2, $('c-nome'), 'scrivi Cognome e Nome');
+  segna(dataValida(), $('c-nascita'), 'controlla la data di nascita');
   segna($('tel').value.replace(/\D/g,'').length >= 6, $('c-tel'), 'scrivi il numero di telefono');
   if (scelti.size === 0){ errori.push('scegli almeno un corso'); primo = primo || $('corsi'); }
   segna($('privacy').checked, $('c-priv'), 'spunta la casella del consenso');
