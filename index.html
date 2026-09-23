@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1f6f5c">
+<title>Iscrizione LUTE Milazzo</title>
+<meta name="description" content="Modulo di iscrizione socio L.U.T.E. Milazzo 2026/2027 da compilare sul cellulare e inviare con WhatsApp.">
+<style>
+:root{
+  --verde:#1f6f5c; --verde-scuro:#144a3d; --verde-chiaro:#e6f2ee;
+  --oro:#b8863b; --oro-chiaro:#fbf3e4;
+  --crema:#fbf9f4; --carta:#ffffff;
+  --testo:#22302c; --testo-tenue:#4f605b; --bordo:#cfd9d5;
+  --wa:#1a8f4a; --errore:#b3261e;
+}
+*{box-sizing:border-box}
+html{font-size:19px;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--crema);color:var(--testo);
+  font-family:"Segoe UI",Roboto,Arial,sans-serif;line-height:1.45;padding-bottom:190px}
+.wrap{max-width:640px;margin:0 auto;padding:0 16px}
+
+header{background:var(--verde);color:#fff;text-align:center;padding:18px 16px 22px}
+header .logo{background:#fff;border-radius:14px;padding:8px 14px;display:inline-block}
+header .logo img{height:62px;display:block}
+header h1{font-size:1.45rem;margin:14px 0 2px;letter-spacing:.3px}
+header p{margin:0;font-size:1rem;opacity:.95}
+
+.intro{background:var(--carta);border:1px solid var(--bordo);border-radius:16px;
+  padding:16px 18px;margin:18px 0}
+.intro ol{margin:6px 0 0;padding-left:1.3em}
+.intro li{margin:6px 0}
+.costo{background:var(--oro-chiaro);border:3px solid var(--oro);border-radius:16px;
+  text-align:center;padding:14px 12px;margin:18px 0}
+.costo b{display:block;font-size:2rem;color:var(--verde-scuro)}
+.costo span{font-size:1.05rem}
+.nota{font-size:.9rem;color:var(--testo-tenue)}
+
+h2{font-size:1.25rem;color:var(--verde-scuro);margin:28px 0 10px;display:flex;align-items:center;gap:10px}
+h2 .n{background:var(--verde);color:#fff;border-radius:50%;width:36px;height:36px;
+  display:inline-flex;align-items:center;justify-content:center;font-size:1.1rem;flex:none}
+
+.campo{margin:0 0 14px}
+.campo label{display:block;font-weight:600;margin-bottom:4px}
+.campo input{width:100%;font-size:1.1rem;padding:14px;border:2px solid var(--bordo);
+  border-radius:12px;background:#fff;color:var(--testo)}
+.campo input:focus{outline:none;border-color:var(--verde);box-shadow:0 0 0 3px var(--verde-chiaro)}
+.campo.err input{border-color:var(--errore)}
+.obbl{color:var(--errore)}
+
+.cat{margin:20px 0 8px;font-size:1.05rem;font-weight:700;color:#fff;background:var(--verde-scuro);
+  padding:8px 14px;border-radius:10px}
+.corso{display:flex;gap:12px;align-items:center;background:#fff;border:2px solid var(--bordo);
+  border-radius:14px;padding:12px 14px;margin:8px 0;cursor:pointer;user-select:none;
+  -webkit-tap-highlight-color:transparent}
+.corso .box{flex:none;width:34px;height:34px;border:3px solid var(--verde);border-radius:8px;
+  display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:#fff;font-weight:700}
+.corso .t{font-weight:600;font-size:1.05rem}
+.corso .d{font-size:.9rem;color:var(--testo-tenue)}
+.corso[aria-checked="true"]{background:var(--verde-chiaro);border-color:var(--verde)}
+.corso[aria-checked="true"] .box{background:var(--verde)}
+.corso[aria-checked="true"] .box::after{content:"✓"}
+
+.privacy{display:flex;gap:12px;align-items:flex-start;background:#fff;border:2px solid var(--bordo);
+  border-radius:14px;padding:14px;cursor:pointer}
+.privacy.err{border-color:var(--errore)}
+.privacy input{width:30px;height:30px;flex:none;accent-color:var(--verde);margin:2px 0 0}
+
+.barra{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:2px solid var(--bordo);
+  padding:10px 16px calc(10px + env(safe-area-inset-bottom));box-shadow:0 -4px 14px rgba(0,0,0,.08)}
+.barra .wrap{padding:0;display:flex;flex-direction:column;gap:6px}
+.conta{text-align:center;font-size:.95rem;color:var(--testo-tenue)}
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;border:0;
+  border-radius:14px;font-size:1.15rem;font-weight:700;padding:16px;cursor:pointer;
+  font-family:inherit;text-decoration:none}
+.btn-wa{background:var(--wa);color:#fff}
+.btn-wa svg{width:28px;height:28px;fill:#fff}
+.btn-sec{background:#fff;color:var(--verde-scuro);border:2px solid var(--verde);margin-top:10px}
+.btn:active{transform:scale(.98)}
+
+.messaggio{background:#fdecea;color:var(--errore);border:2px solid var(--errore);border-radius:12px;
+  padding:8px 12px;margin:0;font-weight:600;font-size:.95rem;display:none}
+.messaggio.on{display:block}
+
+/* finestra dopo l'invio */
+.velo{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;
+  justify-content:center;padding:16px;z-index:10}
+.velo.on{display:flex}
+.fin{background:#fff;border-radius:18px;max-width:520px;width:100%;padding:20px;max-height:92vh;overflow:auto}
+.fin h3{margin:0 0 8px;color:var(--verde-scuro);font-size:1.25rem}
+.fin img{width:100%;border:1px solid var(--bordo);border-radius:8px;margin:10px 0}
+.fin ol{padding-left:1.3em;margin:8px 0}
+.fin li{margin:6px 0}
+footer{text-align:center;font-size:.85rem;color:var(--testo-tenue);margin:30px 0 10px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><img src="img/logo-lute.png" alt="Logo L.U.T.E. Milazzo"></div>
+  <h1>Modulo di iscrizione socio</h1>
+  <p>L.U.T.E. Milazzo · Anno di attività 2026/2027</p>
+</header>
+
+<main class="wrap">
+
+  <div class="costo">
+    <b>Costo € 35</b>
+    <span>indipendentemente dai corsi selezionati</span>
+  </div>
+
+  <div class="intro">
+    <strong>Come iscriversi</strong>
+    <ol>
+      <li>Compila i tuoi dati e scegli i corsi.</li>
+      <li>Premi il pulsante verde <strong>Invia con WhatsApp</strong>: il modulo arriva alla L.U.T.E.</li>
+      <li>Recati poi in sede per il pagamento e per la ricevuta con l'elenco dei corsi selezionati.</li>
+    </ol>
+    <p class="nota">La L.U.T.E. si riserva di accettare l'iscrizione: alcuni corsi sono a numero chiuso.</p>
+  </div>
+
+  <h2><span class="n">1</span> I tuoi dati</h2>
+  <div class="campo" id="c-nome"><label for="nome">Cognome e Nome <span class="obbl">*</span></label>
+    <input id="nome" autocomplete="name" autocapitalize="words"></div>
+  <div class="campo"><label for="luogo">Nato/a a</label>
+    <input id="luogo" autocapitalize="words"></div>
+  <div class="campo"><label for="nascita">il (giorno/mese/anno)</label>
+    <input id="nascita" inputmode="numeric" placeholder="es. 12/03/1950" maxlength="10"></div>
+  <div class="campo"><label for="indirizzo">Indirizzo</label>
+    <input id="indirizzo" autocomplete="street-address"></div>
+  <div class="campo"><label for="citta">Città</label>
+    <input id="citta" autocapitalize="words"></div>
+  <div class="campo" id="c-tel"><label for="tel">Telefono / Cellulare <span class="obbl">*</span></label>
+    <input id="tel" type="tel" inputmode="tel" autocomplete="tel"></div>
+  <div class="campo"><label for="email">Email</label>
+    <input id="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off"></div>
+
+  <h2><span class="n">2</span> Corsi che intendo frequentare</h2>
+  <p class="nota" style="margin-top:0">Tocca un corso per sceglierlo; toccalo di nuovo per toglierlo.</p>
+  <div id="corsi"></div>
+
+  <h2><span class="n">3</span> Consenso</h2>
+  <label class="privacy" id="c-priv"><input type="checkbox" id="privacy">
+    <span>Autorizzo il trattamento dei dati personali per le finalità associative, ai sensi del Reg. UE 2016/679 (GDPR). <span class="obbl">*</span></span></label>
+
+  <button class="btn btn-sec" id="svuota" type="button">Cancella tutto e ricomincia</button>
+
+  <footer>L.U.T.E. – Libera Università per la Terza Età · Milazzo</footer>
+</main>
+
+<div class="barra">
+  <div class="wrap">
+    <div class="messaggio" id="msg"></div>
+    <div class="conta" id="conta">Nessun corso scelto</div>
+    <button class="btn btn-wa" id="invia" type="button">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3a13 13 0 0 0-11.2 19.6L3 29l6.6-1.7A13 13 0 1 0 16 3zm0 23.7c-2 0-4-.6-5.7-1.6l-.4-.2-3.9 1 1-3.8-.3-.4A10.7 10.7 0 1 1 16 26.7zm5.9-8c-.3-.2-1.9-1-2.2-1-.3-.1-.5-.2-.7.2l-1 1.2c-.2.2-.4.2-.7.1a8.8 8.8 0 0 1-4.3-3.8c-.3-.6.3-.5 1-1.7.1-.2 0-.4 0-.6l-1-2.4c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4s-1.2 1.1-1.2 2.8 1.2 3.2 1.4 3.5c.2.2 2.4 3.6 5.8 5 2.1 1 3 1 4 .8.7-.1 1.9-.8 2.2-1.5.3-.8.3-1.4.2-1.5 0-.2-.3-.3-.6-.4z"/></svg>
+      Invia con WhatsApp
+    </button>
+  </div>
+</div>
+
+<div class="velo" id="velo" role="dialog" aria-modal="true" aria-labelledby="fin-t">
+  <div class="fin">
+    <h3 id="fin-t">Il modulo è pronto</h3>
+    <div id="fin-testo"></div>
+    <img id="anteprima" alt="Anteprima del modulo compilato">
+    <a class="btn btn-wa" id="apri-chat" target="_blank" rel="noopener">Apri la chat della L.U.T.E.</a>
+    <button class="btn btn-sec" id="chiudi" type="button">Chiudi</button>
+  </div>
+</div>
+
+<script src="corsi.js"></script>
+<script>
+const NUMERO = '393880775449';
+const CAMPI = ['nome','luogo','nascita','indirizzo','citta','tel','email'];
+const $ = id => document.getElementById(id);
+const scelti = new Set();
+
+/* ---- elenco corsi ---- */
+const box = $('corsi');
+CORSI.forEach(cat => {
+  const h = document.createElement('div'); h.className = 'cat'; h.textContent = cat.n; box.appendChild(h);
+  cat.c.forEach(([cod, tit, doc, giorno]) => {
+    const el = document.createElement('div');
+    el.className = 'corso'; el.setAttribute('role','checkbox'); el.tabIndex = 0;
+    el.setAttribute('aria-checked','false'); el.dataset.cod = cod;
+    el.innerHTML = '<span class="box"></span><span><span class="t"></span><br><span class="d"></span></span>';
+    el.querySelector('.t').textContent = tit;
+    el.querySelector('.d').textContent = doc + ' · ' + giorno;
+    const tocca = () => { scelti.has(cod) ? scelti.delete(cod) : scelti.add(cod); aggiorna(); salva(); };
+    el.addEventListener('click', tocca);
+    el.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); tocca(); } });
+    box.appendChild(el);
+  });
+});
+const tutti = CORSI.flatMap(c => c.c.map(x => ({cat:c.n, cod:x[0], tit:x[1], doc:x[2], giorno:x[3]})));
+
+function aggiorna(){
+  document.querySelectorAll('.corso').forEach(el => el.setAttribute('aria-checked', scelti.has(el.dataset.cod)));
+  const n = scelti.size;
+  $('conta').textContent = n === 0 ? 'Nessun corso scelto' : n === 1 ? '1 corso scelto' : n + ' corsi scelti';
+}
+
+/* data di nascita: barre automatiche */
+$('nascita').addEventListener('input', e => {
+  let v = e.target.value.replace(/\D/g,'').slice(0,8);
+  if (v.length > 4) v = v.slice(0,2)+'/'+v.slice(2,4)+'/'+v.slice(4);
+  else if (v.length > 2) v = v.slice(0,2)+'/'+v.slice(2);
+  e.target.value = v;
+});
+
+/* ---- bozza salvata sul telefono ---- */
+function salva(){
+  try{
+    const d = {corsi:[...scelti], privacy:$('privacy').checked};
+    CAMPI.forEach(k => d[k] = $(k).value);
+    localStorage.setItem('iscrizione-lute', JSON.stringify(d));
+  }catch(e){}
+}
+function carica(){
+  try{
+    const d = JSON.parse(localStorage.getItem('iscrizione-lute') || 'null'); if (!d) return;
+    CAMPI.forEach(k => { if (d[k]) $(k).value = d[k]; });
+    (d.corsi||[]).forEach(c => scelti.add(c));
+    $('privacy').checked = !!d.privacy;
+  }catch(e){}
+}
+CAMPI.forEach(k => $(k).addEventListener('input', () => { salva(); $(k).parentNode.classList.remove('err'); }));
+$('privacy').addEventListener('change', () => { salva(); $('c-priv').classList.remove('err'); });
+carica(); aggiorna();
+
+$('svuota').addEventListener('click', () => {
+  if (!confirm('Vuoi cancellare tutti i dati inseriti?')) return;
+  CAMPI.forEach(k => $(k).value = ''); scelti.clear(); $('privacy').checked = false;
+  aggiorna(); salva(); window.scrollTo({top:0, behavior:'smooth'});
+});
+
+/* ---- controlli ---- */
+function controlla(){
+  const errori = []; let primo = null;
+  const segna = (ok, el, testo) => { if (!ok){ errori.push(testo); el.classList.add('err'); primo = primo || el; } };
+  segna($('nome').value.trim().length > 2, $('c-nome'), 'scrivi Cognome e Nome');
+  segna($('tel').value.replace(/\D/g,'').length >= 6, $('c-tel'), 'scrivi il numero di telefono');
+  if (scelti.size === 0){ errori.push('scegli almeno un corso'); primo = primo || $('corsi'); }
+  segna($('privacy').checked, $('c-priv'), 'spunta la casella del consenso');
+  const m = $('msg');
+  if (errori.length){
+    m.textContent = 'Manca ancora qualcosa: ' + errori.join('; ') + '.';
+    m.classList.add('on');
+    primo.scrollIntoView({behavior:'smooth', block:'center'});
+    return false;
+  }
+  m.classList.remove('on'); return true;
+}
+
+/* ---- disegno dell'immagine del modulo ---- */
+const logo = new Image(); logo.src = 'img/logo-lute.png';
+
+function righe(ctx, testo, maxW){
+  const parole = testo.split(' '), out = []; let r = '';
+  parole.forEach(p => { const prova = r ? r + ' ' + p : p;
+    if (ctx.measureText(prova).width > maxW && r){ out.push(r); r = p; } else r = prova; });
+  if (r) out.push(r); return out;
+}
+
+function disegna(){
+  const W = 1080, M = 60, F = 'Segoe UI, Roboto, Arial, sans-serif';
+  const oggi = new Date().toLocaleDateString('it-IT', {day:'2-digit', month:'2-digit', year:'numeric'});
+  const lista = tutti.filter(c => scelti.has(c.cod));
+  const c = document.createElement('canvas'), ctx = c.getContext('2d');
+  // altezza stimata con margine abbondante, poi si ritaglia
+  c.width = W; c.height = 1300 + lista.length * 130;
+  ctx.fillStyle = '#fbf9f4'; ctx.fillRect(0,0,W,c.height);
+
+  // intestazione
+  ctx.fillStyle = '#1f6f5c'; ctx.fillRect(0,0,W,230);
+  ctx.fillStyle = '#fff'; ctx.fillRect(M, 40, 320, 150);
+  if (logo.complete && logo.naturalWidth){
+    const h = 130, w = logo.naturalWidth * h / logo.naturalHeight;
+    ctx.drawImage(logo, M + (320 - w)/2, 50, w, h);
+  }
+  ctx.textAlign = 'left'; ctx.fillStyle = '#fff';
+  ctx.font = `700 46px ${F}`; ctx.fillText('MODULO DI ISCRIZIONE', 420, 105);
+  ctx.font = `700 46px ${F}`; ctx.fillText('SOCIO', 420, 160);
+  ctx.font = `400 30px ${F}`; ctx.fillText('L.U.T.E. Milazzo · Anno 2026/2027', 420, 205);
+
+  let y = 300;
+  ctx.fillStyle = '#22302c'; ctx.font = `400 28px ${F}`;
+  righe(ctx, "Il/La sottoscritto/a chiede l'iscrizione alla L.U.T.E. di Milazzo per l'anno di attività 2026/2027 e dichiara:", W - 2*M)
+    .forEach(r => { ctx.fillText(r, M, y); y += 40; });
+  y += 20;
+
+  const dati = [
+    ['Cognome e Nome', $('nome').value], ['Nato/a a', $('luogo').value], ['il', $('nascita').value],
+    ['Indirizzo', $('indirizzo').value], ['Città', $('citta').value],
+    ['Tel./Cell.', $('tel').value], ['Email', $('email').value]
+  ];
+  dati.forEach(([k, v]) => {
+    ctx.fillStyle = '#4f605b'; ctx.font = `600 28px ${F}`; ctx.fillText(k, M, y);
+    ctx.fillStyle = '#000'; ctx.font = `600 34px ${F}`;
+    const rr = righe(ctx, (v || '—').trim() || '—', W - 2*M - 300);
+    rr.forEach((r, i) => ctx.fillText(r, M + 300, y + i*44));
+    y += 44 * rr.length + 8;
+    ctx.strokeStyle = '#cfd9d5'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(M, y - 20); ctx.lineTo(W - M, y - 20); ctx.stroke();
+    y += 22;
+  });
+
+  // corsi
+  y += 20;
+  ctx.fillStyle = '#144a3d'; ctx.fillRect(M, y, W - 2*M, 64);
+  ctx.fillStyle = '#fff'; ctx.font = `700 32px ${F}`;
+  ctx.fillText(`Corsi che intendo frequentare (${lista.length})`, M + 20, y + 44);
+  y += 100;
+  lista.forEach(k => {
+    ctx.fillStyle = '#1f6f5c'; ctx.fillRect(M, y - 30, 36, 36);
+    ctx.fillStyle = '#fff'; ctx.font = `700 30px ${F}`; ctx.fillText('✓', M + 6, y);
+    ctx.fillStyle = '#000'; ctx.font = `700 32px ${F}`;
+    const rr = righe(ctx, `${k.cod} – ${k.tit}`, W - 2*M - 60);
+    rr.forEach((r, i) => ctx.fillText(r, M + 56, y + i*42));
+    y += 42 * rr.length;
+    ctx.fillStyle = '#4f605b'; ctx.font = `400 26px ${F}`;
+    ctx.fillText(`${k.doc} · ${k.giorno}`, M + 56, y); y += 56;
+  });
+
+  // consenso e data
+  y += 10;
+  ctx.fillStyle = '#22302c'; ctx.font = `400 26px ${F}`;
+  righe(ctx, "☑ Autorizzo il trattamento dei dati personali per le finalità associative, ai sensi del Reg. UE 2016/679 (GDPR).", W - 2*M)
+    .forEach(r => { ctx.fillText(r, M, y); y += 38; });
+  y += 30;
+  ctx.font = `600 30px ${F}`; ctx.fillText('Data: ' + oggi, M, y);
+  y += 40;
+  ctx.fillStyle = '#4f605b'; ctx.font = `400 22px ${F}`;
+  ctx.fillText('Modulo inviato dal cellulare tramite l\'app di iscrizione L.U.T.E.', M, y);
+  y += 40;
+
+  // ritaglio all'altezza effettiva
+  const out = document.createElement('canvas'); out.width = W; out.height = y;
+  out.getContext('2d').drawImage(c, 0, 0);
+  return out;
+}
+
+function nomeFile(){
+  const n = $('nome').value.trim().replace(/[^\p{L}\p{N}]+/gu, '_') || 'socio';
+  return `Iscrizione_LUTE_${n}.jpg`;
+}
+
+/* ---- invio ---- */
+$('invia').addEventListener('click', async () => {
+  if (!controlla()) return;
+  if (!logo.complete) await new Promise(r => { logo.onload = logo.onerror = r; });
+  const canvas = disegna();
+  const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.9));
+  const file = new File([blob], nomeFile(), {type:'image/jpeg'});
+  const testo = `Iscrizione L.U.T.E. 2026/2027 – ${$('nome').value.trim()}`;
+  const urlChat = `https://wa.me/${NUMERO}?text=${encodeURIComponent(testo)}`;
+  const urlImg = URL.createObjectURL(blob);
+
+  $('anteprima').src = urlImg;
+  $('apri-chat').href = urlChat;
+
+  if (navigator.canShare && navigator.canShare({files:[file]})){
+    $('fin-testo').innerHTML = '<ol><li>Nel menu che si è aperto scegli <strong>WhatsApp</strong>.</li>' +
+      '<li>Cerca il contatto della L.U.T.E. (<strong>388 077 5449</strong>) e premi <strong>Invia</strong>.</li></ol>' +
+      '<p class="nota">Se il menu non si è aperto, premi di nuovo il pulsante verde in basso.</p>';
+    $('velo').classList.add('on');
+    try { await navigator.share({files:[file], text: testo}); }
+    catch(e){ /* annullato dall'utente */ }
+  } else {
+    // telefono che non permette la condivisione diretta: salvo l'immagine e apro la chat
+    const a = document.createElement('a'); a.href = urlImg; a.download = file.name;
+    document.body.appendChild(a); a.click(); a.remove();
+    $('fin-testo').innerHTML = '<ol><li>L\'immagine del modulo è stata <strong>salvata</strong> sul telefono.</li>' +
+      '<li>Premi <strong>Apri la chat della L.U.T.E.</strong></li>' +
+      '<li>Nella chat tocca la <strong>graffetta 📎</strong>, scegli l\'immagine e premi <strong>Invia</strong>.</li></ol>';
+    $('velo').classList.add('on');
+  }
+});
+$('chiudi').addEventListener('click', () => $('velo').classList.remove('on'));
+</script>
+</body>
+</html>
