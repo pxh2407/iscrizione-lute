@@ -447,7 +447,12 @@ $('invia').addEventListener('click', async () => {
   const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.9));
   const file = new File([blob], nomeFile(), {type:'image/jpeg'});
   const testo = `Iscrizione L.U.T.E. 2026/2027 – ${$('nome').value.trim()}`;
-  const urlChat = `https://wa.me/${NUMERO}?text=${encodeURIComponent(testo)}`;
+  // sul cellulare apro direttamente l'app WhatsApp (wa.me in alcuni browser porta a WhatsApp Web)
+  const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const urlChat = mobile
+    ? `whatsapp://send?phone=${NUMERO}&text=${encodeURIComponent(testo)}`
+    : `https://wa.me/${NUMERO}?text=${encodeURIComponent(testo)}`;
+  $('apri-chat').target = mobile ? '_self' : '_blank';
   const urlImg = URL.createObjectURL(blob);
 
   $('anteprima').src = urlImg;
