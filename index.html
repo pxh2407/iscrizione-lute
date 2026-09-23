@@ -185,7 +185,7 @@ CORSI.forEach(cat => {
     el.className = 'corso'; el.setAttribute('role','checkbox'); el.tabIndex = 0;
     el.setAttribute('aria-checked','false'); el.dataset.cod = cod;
     el.innerHTML = '<span class="box"></span><span><span class="t"></span><br><span class="d"></span></span>';
-    el.querySelector('.t').textContent = tit;
+    el.querySelector('.t').textContent = cod + ' – ' + tit;
     el.querySelector('.d').textContent = doc + ' · ' + giorno;
     const tocca = () => { scelti.has(cod) ? scelti.delete(cod) : scelti.add(cod); aggiorna(); salva(); };
     el.addEventListener('click', tocca);
