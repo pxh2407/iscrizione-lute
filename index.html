@@ -389,10 +389,28 @@ $('invia').addEventListener('click', () => {
   const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   // sul PC apro direttamente WhatsApp Web (wa.me mostrerebbe prima la pagina "scarica WhatsApp")
   const url = mobile ? `whatsapp://send?phone=${NUMERO}&text=${testo}` : `https://web.whatsapp.com/send?phone=${NUMERO}&text=${testo}`;
-  $('velo').classList.add('on');   // "Modulo inviato" resta visibile al ritorno nell'app
+  mostraInviato();   // "Modulo inviato" resta visibile al ritorno nell'app
   if (mobile) location.href = url; else window.open(url, '_blank');
 });
-$('chiudi').addEventListener('click', () => $('velo').classList.remove('on'));
+$('chiudi').addEventListener('click', () => {
+  $('velo').classList.remove('on');
+  try { localStorage.removeItem('iscrizione-inviata'); } catch(e) {}
+});
+
+/* ---- al ritorno da WhatsApp il browser spesso ricarica la pagina: la finestra "Modulo inviato"
+        viene riaperta finché non si preme Chiudi (al massimo per 30 minuti) ---- */
+function mostraInviato(){
+  $('velo').classList.add('on');
+  try { localStorage.setItem('iscrizione-inviata', Date.now()); } catch(e) {}
+}
+function riapriInviato(){
+  let t = 0;
+  try { t = +localStorage.getItem('iscrizione-inviata') || 0; } catch(e) {}
+  if (t && Date.now() - t < 30*60*1000) $('velo').classList.add('on');
+}
+riapriInviato();
+window.addEventListener('pageshow', riapriInviato);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) riapriInviato(); });
 
 /* ---- invio con email (predisposto: si attiva con EMAIL_ATTIVA = true) ---- */
 if (EMAIL_ATTIVA) {
@@ -402,7 +420,7 @@ if (EMAIL_ATTIVA) {
     const d = raccogli();
     const oggetto = encodeURIComponent('Iscrizione L.U.T.E. 2026/2027 - ' + d.nome);
     const corpo = encodeURIComponent(messaggio(d).replace(/\*/g, ''));
-    $('velo').classList.add('on');
+    mostraInviato();
     location.href = `mailto:${EMAIL}?subject=${oggetto}&body=${corpo}`;
   });
 }
