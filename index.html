@@ -205,6 +205,20 @@ footer{text-align:center;font-size:.85rem;color:var(--testo-tenue);margin:30px 0
   </div>
 </div>
 
+<div class="velo" id="velo-foto" role="dialog" aria-modal="true" aria-labelledby="foto-t">
+  <div class="fin">
+    <h3 id="foto-t">📷 Prima di inviare: la foto</h3>
+    <p>Ora si apre WhatsApp con il modulo già scritto: premi la <strong>freccia Invia</strong>.</p>
+    <div class="fototessera">
+      <b>Subito dopo, invia la tua foto per il badge</b>
+      Nella stessa chat WhatsApp tocca la graffetta 📎 o la fotocamera e invia una <strong>foto formato tessera</strong>:
+      solo il viso, ben illuminato, guardando dritto, su sfondo chiaro.
+    </div>
+    <button class="btn btn-wa" id="apri-wa" type="button">Ho capito, apri WhatsApp</button>
+    <button class="btn btn-sec" id="annulla-wa" type="button">Torna al modulo</button>
+  </div>
+</div>
+
 <div class="velo" id="velo" role="dialog" aria-modal="true" aria-labelledby="fin-t">
   <div class="fin">
     <h3 id="fin-t">✅ Modulo inviato</h3>
@@ -382,8 +396,14 @@ function messaggio(d){
 }
 
 /* ---- invio: si apre la chat del numero indicato con il messaggio già scritto ---- */
+// prima di aprire WhatsApp si mostra l'avviso della foto: dopo l'invio il socio resta in WhatsApp
 $('invia').addEventListener('click', () => {
   if (!controlla()) return;
+  $('velo-foto').classList.add('on');
+});
+$('annulla-wa').addEventListener('click', () => $('velo-foto').classList.remove('on'));
+$('apri-wa').addEventListener('click', () => {
+  $('velo-foto').classList.remove('on');
   const testo = encodeURIComponent(messaggio(raccogli()));
   // sul cellulare apro direttamente l'app WhatsApp (wa.me in alcuni browser porta a WhatsApp Web)
   const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
