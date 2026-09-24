@@ -391,7 +391,7 @@ function messaggio(d){
   r.push('', '*Corsi scelti (' + d.corsi.length + '):*');
   TUTTI_CORSI.filter(c => d.corsi.includes(c.cod)).forEach(c => r.push('✅ ' + c.cod + ' – ' + c.tit));
   r.push('', '☑️ Consenso privacy (GDPR) accettato', 'Data: ' + d.data);
-  r.push('', '📄 *Modulo* (immagine JPG da salvare o stampare):', SITO + 'modulo.html#' + codificaDati(d));
+  // niente più link al modulo-immagine: confondeva il socio, e Access ricrea il modulo dal testo
   return r.join('\n');
 }
 
