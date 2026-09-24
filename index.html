@@ -119,6 +119,11 @@ body.gia-socio .solo-nuovo{display:none}
 .fin li{margin:6px 0}
 .fin h3{font-size:1.4rem;color:var(--wa)}
 .fototessera{background:var(--oro-chiaro);border:2px solid var(--oro);border-radius:12px;padding:10px 12px;margin:10px 0;font-size:.95rem}
+.proposta{background:var(--oro-chiaro);border:2px solid var(--oro);border-radius:12px;padding:10px 12px;margin-top:8px;font-size:1.05rem;word-break:break-all}
+.proposta b{color:var(--verde-scuro)}
+.prop-btn{display:flex;gap:8px;margin-top:10px}
+.prop-btn button{flex:1;font:inherit;font-weight:700;padding:10px 6px;border-radius:10px;border:2px solid var(--verde);background:#fff;color:var(--verde-scuro);cursor:pointer;word-break:normal}
+.prop-btn button.si{background:var(--verde);color:#fff}
 .fototessera b{display:block;font-size:1.05rem;color:var(--verde-scuro);margin-bottom:2px}
 footer{text-align:center;font-size:.85rem;color:var(--testo-tenue);margin:30px 0 10px}
 </style>
@@ -177,7 +182,11 @@ footer{text-align:center;font-size:.85rem;color:var(--testo-tenue);margin:30px 0
   <div class="campo solo-nuovo" id="c-tel"><label for="tel">Telefono / Cellulare <span class="obbl">*</span></label>
     <input id="tel" type="tel" inputmode="tel" autocomplete="tel"></div>
   <div class="campo solo-nuovo" id="c-email"><label for="email">Email <span class="obbl">*</span></label>
-    <input id="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off"></div>
+    <input id="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off">
+    <div class="proposta" id="prop-email" hidden>
+      <span id="prop-testo"></span>
+      <div class="prop-btn"><button type="button" class="si" id="prop-si">Sì, correggi</button><button type="button" id="prop-no">No, è giusta</button></div>
+    </div></div>
   </div>
 
   <h2><span class="n">2</span> Corsi che intendo frequentare</h2>
@@ -331,6 +340,73 @@ CAMPI.forEach(k => $(k).addEventListener('input', () => { salva(); $(k).parentNo
 $('privacy').addEventListener('change', () => { salva(); $('c-priv').classList.remove('err'); });
 carica(); dividiData(); mostraTipo(); aggiorna();
 
+/* ---- correzioni automatiche sicure, quando si esce dal campo ---- */
+const PICCOLE = ['di','de','del','dello','della','dei','degli','delle','da','dal','dallo','dalla','dai','dagli','dalle',
+  'e','ed','in','a','al','allo','alla','ai','agli','alle','su','sul','sulla','l','d','dell','dall','nell','sull','all'];
+// "rossi maria" / "ROSSI MARIA" -> "Rossi Maria"; nei luoghi "barcellona pozzo di gotto" -> "Barcellona Pozzo di Gotto".
+// Il testo scritto già con maiuscole e minuscole resta com'è (può essere voluto).
+function iniziali(s, luogo){
+  s = s.replace(/\s+/g, ' ').trim();
+  if (!s || (s !== s.toLowerCase() && s !== s.toUpperCase())) return s;
+  return s.toLowerCase().split(' ').map((w, i) =>
+    w.split(/(['’-])/).map((p, j) =>
+      (luogo && i > 0 && j === 0 && PICCOLE.includes(p)) ? p : p.charAt(0).toUpperCase() + p.slice(1)
+    ).join('')
+  ).join(' ');
+}
+const pulisciTel = s => s.replace(/[^\d+]/g, '').replace(/(?!^)\+/g, '');          // solo cifre (e il + iniziale)
+const pulisciEmail = s => s.replace(/\s+/g, '').replace(/,/g, '.').replace(/\.+$/, '').toLowerCase();
+const PULIZIA = {nome: s => iniziali(s), luogo: s => iniziali(s, true), indirizzo: s => iniziali(s, true),
+                 citta: s => iniziali(s, true), tel: pulisciTel, email: pulisciEmail};
+function pulisci(k){ const v = PULIZIA[k]($(k).value); if (v !== $(k).value){ $(k).value = v; salva(); } }
+Object.keys(PULIZIA).forEach(k => $(k).addEventListener('change', () => { pulisci(k); if (k === 'email') proponiEmail(); }));
+
+/* ---- email: "mario@gmial.com" -> "Forse intendevi mario@gmail.com?" ---- */
+const DOMINI = ['gmail.com','libero.it','hotmail.it','hotmail.com','yahoo.it','yahoo.com','outlook.it','outlook.com',
+  'live.it','live.com','virgilio.it','alice.it','tiscali.it','icloud.com','me.com','msn.com','tim.it','tin.it',
+  'fastwebnet.it','email.it','inwind.it','teletu.it','aruba.it'];
+const DOMINIO_UNICO = {gmail:'gmail.com', libero:'libero.it', virgilio:'virgilio.it', alice:'alice.it', tiscali:'tiscali.it',
+  icloud:'icloud.com', fastwebnet:'fastwebnet.it', inwind:'inwind.it', teletu:'teletu.it'};
+function distanza(a, b){   // lettere da cambiare, aggiungere, togliere o scambiare
+  const d = Array.from({length:a.length+1}, (_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++){
+    d[i][j] = Math.min(d[i-1][j] + 1, d[i][j-1] + 1, d[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1));
+    if (i > 1 && j > 1 && a[i-1] === b[j-2] && a[i-2] === b[j-1]) d[i][j] = Math.min(d[i][j], d[i-2][j-2] + 1);
+  }
+  return d[a.length][b.length];
+}
+function propostaEmail(v){
+  const at = v.lastIndexOf('@'); if (at < 1) return '';
+  const nome = v.slice(0, at), dom = v.slice(at + 1);
+  if (!dom || DOMINI.includes(dom)) return '';
+  const base = dom.split('.')[0];                        // "gmail.it" o "gmail" -> gmail.com
+  if (DOMINIO_UNICO[base]) return nome + '@' + DOMINIO_UNICO[base];
+  let meglio = '', dm = 3;
+  if (dom.length >= 5) DOMINI.forEach(x => { const n = distanza(dom, x); if (n < dm){ dm = n; meglio = x; } });
+  if (meglio) return nome + '@' + meglio;
+  for (const [k, x] of Object.entries(DOMINIO_UNICO)) if (distanza(base, k) <= 1) return nome + '@' + x;
+  return '';
+}
+let emailConfermata = '';   // email che chi compila ha detto essere giusta così
+function proponiEmail(){
+  const v = $('email').value, p = propostaEmail(v), box = $('prop-email');
+  box.hidden = !p || v === emailConfermata;
+  if (!box.hidden){
+    $('prop-testo').textContent = 'Forse intendevi ';
+    const b = document.createElement('b'); b.textContent = p; $('prop-testo').append(b, '?');
+    box.dataset.p = p;
+  }
+  return !box.hidden;
+}
+$('email').addEventListener('input', () => { $('prop-email').hidden = true; });
+$('prop-si').addEventListener('click', () => {
+  $('email').value = $('prop-email').dataset.p; $('prop-email').hidden = true; $('c-email').classList.remove('err'); salva();
+});
+$('prop-no').addEventListener('click', () => {
+  emailConfermata = $('email').value; $('prop-email').hidden = true; $('c-email').classList.remove('err');
+});
+
 $('svuota').addEventListener('click', () => {
   if (!confirm('Vuoi cancellare tutti i dati inseriti?')) return;
   CAMPI.forEach(k => $(k).value = ''); dividiData(); scelti.clear(); $('privacy').checked = false;
@@ -342,6 +418,7 @@ $('svuota').addEventListener('click', () => {
 function controlla(){
   const errori = []; let primo = null;
   const segna = (ok, el, testo) => { if (!ok){ errori.push(testo); el.classList.add('err'); primo = primo || el; } };
+  Object.keys(PULIZIA).forEach(pulisci);   // anche se il campo è stato riempito in automatico dal telefono
   segna(!!tipo, $('c-tipo'), 'rispondi se sei un nuovo socio');
   if (tipo){
     segna($('nome').value.trim().length > 2, $('c-nome'), 'scrivi Cognome e Nome');
@@ -351,8 +428,11 @@ function controlla(){
     segna($('luogo').value.trim().length > 1, $('c-luogo'), 'scrivi il luogo di nascita');
     segna($('indirizzo').value.trim().length > 3, $('c-indirizzo'), "scrivi l'indirizzo");
     segna($('citta').value.trim().length > 1, $('c-citta'), 'scrivi la città');
-    segna($('tel').value.replace(/\D/g,'').length >= 6, $('c-tel'), 'scrivi il numero di telefono');
-    segna(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($('email').value.trim()), $('c-email'), "scrivi un'email corretta");
+    const cifre = $('tel').value.replace(/\D/g,'').length;
+    segna(cifre >= 6 && cifre <= 13, $('c-tel'), 'scrivi il numero di telefono');
+    const emailBuona = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($('email').value.trim());
+    segna(emailBuona, $('c-email'), "scrivi un'email corretta");
+    if (emailBuona) segna(!proponiEmail(), $('c-email'), "controlla l'email: forse c'è un errore");
   }
   if (scelti.size === 0){ errori.push('scegli almeno un corso'); primo = primo || $('corsi'); }
   segna($('privacy').checked, $('c-priv'), 'spunta la casella del consenso');
